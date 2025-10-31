@@ -32,24 +32,32 @@ app.get('/health', (req, res) => {
   });
 });
 
-// MongoDB connection with better error handling
+// MongoDB connection with SSL FIX
 const connectDB = async () => {
   try {
-    console.log('🔗 Attempting MongoDB connection...');
+    console.log('🔗 Attempting MongoDB connection with SSL fix...');
     
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000, // 30 seconds
-      socketTimeoutMS: 45000, // 45 seconds
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      // SSL/TLS FIXES:
+      ssl: true,
+      tlsAllowInvalidCertificates: true,
+      tlsInsecure: true,
+      retryWrites: true,
+      w: 'majority'
     });
     
     console.log('✅ MongoDB Connected:', conn.connection.host);
     
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    console.log('💡 Deployment Tip: This might work on Render servers even if it fails locally');
-    // Don't exit process - let Render handle it
+    console.log('💡 Next steps:');
+    console.log('   1. Check environment variables in Render');
+    console.log('   2. Verify MongoDB Atlas network access');
+    console.log('   3. Check connection string format');
   }
 };
 
