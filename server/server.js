@@ -32,22 +32,50 @@ app.get('/health', (req, res) => {
   });
 });
 
-// MongoDB connection with SSL FIX
+// API Documentation route - ADD THIS
+app.get('/api/docs', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Voting Platform API Documentation',
+    endpoints: {
+      auth: {
+        'POST /api/auth/admin/register': 'Register first admin',
+        'POST /api/auth/admin/login': 'Admin login',
+        'POST /api/auth/register': 'User registration',
+        'POST /api/auth/login': 'User login',
+        'POST /api/auth/verify': 'Voter verification',
+        'GET /api/auth/me': 'Get current user profile'
+      },
+      elections: {
+        'GET /api/elections': 'Get all elections',
+        'GET /api/elections/active': 'Get active elections',
+        'GET /api/elections/:id': 'Get single election',
+        'POST /api/elections': 'Create election (Admin only)',
+        'PUT /api/elections/:id': 'Update election (Admin only)',
+        'DELETE /api/elections/:id': 'Delete election (Admin only)',
+        'GET /api/elections/:id/results': 'Get election results'
+      },
+      votes: {
+        'POST /api/votes/cast': 'Cast vote',
+        'GET /api/votes/results/:electionId': 'Get election results',
+        'GET /api/votes/my-votes': 'Get user voting history',
+        'GET /api/votes/stats/:electionId': 'Get vote statistics (Admin only)',
+        'GET /api/votes/has-voted/:electionId': 'Check if user voted'
+      }
+    }
+  });
+});
+
+// MongoDB connection
 const connectDB = async () => {
   try {
-    console.log('🔗 Attempting MongoDB connection with SSL fix...');
+    console.log('🔗 Attempting MongoDB connection...');
     
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      // SSL/TLS FIXES:
-      ssl: true,
-      tlsAllowInvalidCertificates: true,
-      tlsInsecure: true,
-      retryWrites: true,
-      w: 'majority'
     });
     
     console.log('✅ MongoDB Connected:', conn.connection.host);
@@ -82,4 +110,13 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Database status: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Connecting...'}`);
+});
+
+// 404 Handler for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`,
+    suggestion: 'Check /api/docs for available endpoints'
+  });
 });
